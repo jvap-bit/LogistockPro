@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | LogiStock</title>
+  <link rel="icon" href="web/assets/IMG/logoCanto.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="web/assets/css/shared.css">
+  <link rel="stylesheet" href="web/assets/css/login.css">
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="web/assets/IMG/logoCanto.png" alt="LogiStock">
+      <div class="login-logo-text">
+        <h1>LogiStock</h1>
+        <span>Indústria Logística</span>
+      </div>
+    </div>
+
+    <h2>Bem-vindo de volta!</h2>
+    <p>Acesse sua conta para continuar</p>
+
+    <form id="formLogin">
+      <div class="input-group">
+        <label>E-mail</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" id="email-login" placeholder="seu@email.com" required>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="senha-login" placeholder="••••••••" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-login">
+        <i class="fa-solid fa-right-to-bracket"></i> Entrar
+      </button>
+    </form>
+
+    <div class="divider">ou</div>
+
+    <div class="login-footer">
+      Não tem uma conta? <a href="web/pages/cadastro.html">Cadastre-se aqui</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('formLogin').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email-login').value;
+      const nome = email.split('@')[0];
+      localStorage.setItem('usuarioLogado', nome);
+      window.location.href = "web/pages/inicio.html";
+    });
+  </script>
+</body>
+</html>

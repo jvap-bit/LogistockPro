@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro | LogiStock</title>
+  <link rel="icon" href="../assets/IMG/logoCanto.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <link rel="stylesheet" href="../assets/css/cadastro.css">
+  <script>
+    (function() {
+      if (localStorage.getItem('logistockTema') === 'dark') {
+        document.documentElement.classList.add('dark-mode-early');
+      }
+    })();
+  
+//NOME DO PERFIL
+(function() {
+  const nome = localStorage.getItem('usuarioLogado');
+  if (nome) {
+    document.querySelectorAll('.nome-perfil-header').forEach(el => el.textContent = nome);
+    document.querySelectorAll('.nome-perfil-menu').forEach(el => el.textContent = nome);
+  }
+})();
+
+</script>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <img src=" ../assets/IMG/logoCanto.png" alt="LogiStock">
+      <div><h1>LogiStock</h1><span>Indústria Logística</span></div>
+    </div>
+    <h2>Criar Conta</h2>
+    <p>Cadastre-se gratuitamente</p>
+
+    
+    <form onsubmit="return false">
+      <div class="input-group"><label>Nome Completo</label><div class="iw"><i class="fa-solid fa-user"></i><input type="text" placeholder="Seu nome" required></div></div>
+      <div class="input-group"><label>E-mail</label><div class="iw"><i class="fa-solid fa-envelope"></i><input type="email" placeholder="seu@email.com" required></div></div>
+      <div class="input-group"><label>Senha</label><div class="iw"><i class="fa-solid fa-lock"></i><input type="password" placeholder="Mínimo 8 caracteres" required></div></div>
+      <div class="input-group"><label>Confirmar Senha</label><div class="iw"><i class="fa-solid fa-lock"></i><input type="password" placeholder="Repita a senha" required></div></div>
+      <button class="btn" onclick="window.location.href='../../index.html'"><i class="fa-solid fa-user-plus"></i> Criar Conta</button>
+    </form>
+    <div class="foot">Já tem uma conta? <a href='../../index.html'>Faça login</a></div>
+  </div>
+</body>
+</html>
