@@ -1,9 +1,28 @@
 import os
+import re
 import customtkinter as ctk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog
 import sqlite3
+from PIL import Image, ImageTk
 from styles import *
 from database import registrar_log, cadastrar_usuario, autenticar_usuario
+
+try:
+    import cv2
+    from pyzbar.pyzbar import decode as ler_qrcode_frame
+    LEITOR_QR_DISPONIVEL = True
+except ImportError:
+    LEITOR_QR_DISPONIVEL = False
+
+try:
+    import pymupdf as _pymupdf_fitz
+    LEITOR_PDF_DISPONIVEL = True
+except ImportError:
+    try:
+        import fitz as _pymupdf_fitz
+        LEITOR_PDF_DISPONIVEL = True
+    except ImportError:
+        LEITOR_PDF_DISPONIVEL = False
 
 # Força tema escuro idêntico ao site web
 import customtkinter as _ctk_setup
@@ -394,7 +413,7 @@ class InterfaceMixin:
         for f in self.column_frames.values():
             for w in f.winfo_children(): w.destroy()
             
-        conn = sqlite3.connect("producao.db"); cur = conn.cursor()
+        conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor()
         cur.execute("SELECT status, COUNT(*) FROM pedidos GROUP BY status"); stats = dict(cur.fetchall())
         self.lbl_stats.configure(text=f"A Fazer: {stats.get('A Fazer', 0)} | Produção: {stats.get('Em Andamento', 0)} | Pronto: {stats.get('Finalizado', 0)}")
         
@@ -468,7 +487,7 @@ class InterfaceMixin:
     def mover_db(self, id_p, status_atual, num_op=None):
         fluxo = ["A Fazer", "Em Andamento", "Qualidade", "Finalizado"]
         try:
-            n = fluxo[fluxo.index(status_atual) + 1]; conn = sqlite3.connect("producao.db"); cur = conn.cursor()
+            n = fluxo[fluxo.index(status_atual) + 1]; conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor()
             cur.execute("UPDATE pedidos SET status = ? WHERE id = ?", (n, id_p)); conn.commit(); conn.close()
             if num_op: registrar_log(f"OP {num_op} avançou para {n}")
             self.atualizar_interface()
@@ -476,7 +495,7 @@ class InterfaceMixin:
 
     def excluir_pedido(self, id_p, num_op=None):
         if messagebox.askyesno("Excluir", "Deseja remover permanentemente?"):
-            conn = sqlite3.connect("producao.db"); cur = conn.cursor(); cur.execute("DELETE FROM pedidos WHERE id = ?", (id_p,)); conn.commit(); conn.close()
+            conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor(); cur.execute("DELETE FROM pedidos WHERE id = ?", (id_p,)); conn.commit(); conn.close()
             if num_op: registrar_log(f"OP {num_op} excluída.")
             self.atualizar_interface()
 
@@ -486,7 +505,7 @@ class InterfaceMixin:
         self.logs_container = ctk.CTkFrame(self, fg_color=ML_CINZA_FUNDO); self.logs_container.place(relx=0, rely=0.07, relwidth=1, relheight=0.93)
         ctk.CTkLabel(self.logs_container, text="AUDITORIA", font=("Trebuchet MS", 24, "bold"), text_color=ML_AZUL).pack(pady=20)
         f_logs = ctk.CTkScrollableFrame(self.logs_container, width=820, height=500, fg_color="#162040", corner_radius=14, border_width=1, border_color="#1E3A5F"); f_logs.pack(pady=10)
-        conn = sqlite3.connect("producao.db"); cur = conn.cursor(); cur.execute("SELECT data_hora, acao FROM logs ORDER BY id DESC"); logs = cur.fetchall(); conn.close()
+        conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor(); cur.execute("SELECT data_hora, acao FROM logs ORDER BY id DESC"); logs = cur.fetchall(); conn.close()
         for d, a in logs: ctk.CTkLabel(f_logs, text=f"[{d}] - {a}", font=("Consolas", 12), text_color="#E6EDF3").pack(anchor="w", padx=10)
         ctk.CTkButton(self.logs_container, text="VOLTAR", command=self.fechar_telas_adicionais).pack(pady=20)
 
@@ -503,7 +522,7 @@ class InterfaceMixin:
 
     def carregar_dados_tabela(self):
         for i in self.tree.get_children(): self.tree.delete(i)
-        conn = sqlite3.connect("producao.db"); cur = conn.cursor(); cur.execute("SELECT id, numero, produto, quantidade, cliente, bairro, status FROM pedidos"); [self.tree.insert("", "end", values=r) for r in cur.fetchall()]; conn.close()
+        conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor(); cur.execute("SELECT id, numero, produto, quantidade, cliente, bairro, status FROM pedidos"); [self.tree.insert("", "end", values=r) for r in cur.fetchall()]; conn.close()
 
     def buscar_cep_api(self, cep, campos):
         """Consulta ViaCEP e preenche rua e bairro automaticamente."""
@@ -737,7 +756,7 @@ class InterfaceMixin:
                     messagebox.showwarning("Campo obrigatório", f"Preencha o campo: {nome}")
                     campos[chave].focus()
                     return
-            conn = sqlite3.connect("producao.db")
+            conn = sqlite3.connect(DB_PATH, timeout=15)
             cur  = conn.cursor()
             cur.execute(
                 "INSERT INTO pedidos (numero, produto, quantidade, cliente, rua, casa, bairro, cep, prioridade, status, descricao) "
@@ -793,7 +812,7 @@ class InterfaceMixin:
             import os
 
             # 1. Busca os dados
-            conn = sqlite3.connect(DB_PATH)
+            conn = sqlite3.connect(DB_PATH, timeout=15)
             df = pd.read_sql_query("SELECT * FROM pedidos", conn)
             conn.close()
 
@@ -822,7 +841,7 @@ class InterfaceMixin:
 
         # --- ESSA É A FUNÇÃO QUE VOCÊ ALTERA ---
         def buscar():
-            conn = sqlite3.connect("producao.db")
+            conn = sqlite3.connect(DB_PATH, timeout=15)
             cur = conn.cursor()
             cur.execute("SELECT status, cliente, produto FROM pedidos WHERE numero = ?", (ent_cod.get(),))
             r = cur.fetchone()
@@ -861,6 +880,7 @@ class InterfaceMixin:
         
         ctk.CTkButton(header, text="SAIR", width=60, fg_color="#cc0000", command=self.desligar_sistema).pack(side="right", padx=10)
         ctk.CTkButton(header, text="TROCAR CONTA", width=110, fg_color="transparent", border_width=1, border_color="#1E3A5F", text_color="#B8C5D6", hover_color="#1E2D4A", corner_radius=50, command=self.trocar_conta).pack(side="right", padx=10)
+        ctk.CTkButton(header, text="📷 LER QR CODE", width=150, fg_color=ML_AZUL, text_color="#0A1628", font=("Trebuchet MS", 12, "bold"), corner_radius=50, command=self.abrir_leitor_qrcode).pack(side="right", padx=10)
 
         # Container da lista
         self.scroll_entrega = ctk.CTkScrollableFrame(self, fg_color="#0A1628")
@@ -870,7 +890,7 @@ class InterfaceMixin:
     def atualizar_lista_entrega(self):
         for w in self.scroll_entrega.winfo_children(): w.destroy()
         
-        conn = sqlite3.connect("producao.db")
+        conn = sqlite3.connect(DB_PATH, timeout=15)
         cur = conn.cursor()
         # Busca pedidos prontos ou em transporte
         cur.execute("SELECT id, numero, produto, cliente, status, bairro FROM pedidos WHERE status IN ('Finalizado', 'Em Rota', 'Entregue')")
@@ -900,8 +920,218 @@ class InterfaceMixin:
         conn.close()
 
     def mudar_status_entregador(self, id_p, novo, op):
-        conn = sqlite3.connect("producao.db"); cur = conn.cursor()
+        conn = sqlite3.connect(DB_PATH, timeout=15); cur = conn.cursor()
         cur.execute("UPDATE pedidos SET status = ? WHERE id = ?", (novo, id_p))
         conn.commit(); conn.close()
         registrar_log(f"OP {op} atualizada para {novo} pelo entregador.")
         self.atualizar_lista_entrega()
+
+    # =========================================================================
+    # LEITOR DE QR CODE (conta do Entregador)
+    # =========================================================================
+    def _extrair_numero_op(self, texto_qr):
+        """Extrai o número da OP de dentro do texto lido no QR Code."""
+        m = re.search(r"OP:\s*(\S+)", texto_qr)
+        return m.group(1).strip() if m else None
+
+    def _buscar_pedido_por_numero(self, numero_op):
+        conn = sqlite3.connect(DB_PATH, timeout=15)
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, numero, produto, quantidade, cliente, rua, casa, bairro, cep, prioridade, status "
+            "FROM pedidos WHERE numero = ?",
+            (numero_op,)
+        )
+        pedido = cur.fetchone()
+        conn.close()
+        return pedido
+
+    def abrir_leitor_qrcode(self):
+        if not LEITOR_QR_DISPONIVEL:
+            messagebox.showerror(
+                "Leitor indisponível",
+                "As bibliotecas de leitura de QR Code (opencv-python e pyzbar) "
+                "não estão instaladas. Rode:\n\npip install opencv-python pyzbar"
+            )
+            return
+
+        self._qr_janela = ctk.CTkToplevel(self)
+        self._qr_janela.title("Leitor de QR Code - Confirmar Pedido")
+        self._qr_janela.geometry("520x640")
+        self._qr_janela.attributes("-topmost", True)
+        self._qr_janela.configure(fg_color=NAVY)
+        self._qr_janela.protocol("WM_DELETE_WINDOW", self._fechar_leitor_qrcode)
+
+        ctk.CTkLabel(self._qr_janela, text="LER QR CODE DO PEDIDO", font=("Trebuchet MS", 18, "bold"),
+                     text_color=ML_AZUL).pack(pady=(18, 6))
+        ctk.CTkLabel(self._qr_janela, text="Aponte a câmera para o QR Code da nota fiscal\nou selecione uma foto do QR Code.",
+                     font=("Trebuchet MS", 12), text_color="#8896AB", justify="center").pack(pady=(0, 10))
+
+        # Área de vídeo / imagem
+        self._qr_video_label = ctk.CTkLabel(self._qr_janela, text="", fg_color="#0A1628",
+                                             width=460, height=340, corner_radius=12)
+        self._qr_video_label.pack(pady=10, padx=20)
+
+        # Área de resultado (aparece após leitura)
+        self._qr_resultado_frame = ctk.CTkFrame(self._qr_janela, fg_color="#162040", corner_radius=12,
+                                                  border_width=1, border_color="#1E3A5F")
+        self._qr_resultado_frame.pack(fill="x", padx=20, pady=(0, 10))
+        self._qr_resultado_label = ctk.CTkLabel(self._qr_resultado_frame, text="Aguardando leitura...",
+                                                 font=("Trebuchet MS", 12), text_color="#8896AB",
+                                                 justify="left", anchor="w")
+        self._qr_resultado_label.pack(fill="x", padx=14, pady=12)
+
+        # Botões
+        btn_row = ctk.CTkFrame(self._qr_janela, fg_color="transparent")
+        btn_row.pack(pady=(0, 16))
+        ctk.CTkButton(btn_row, text="📁 SELECIONAR IMAGEM/PDF", width=220, fg_color="transparent",
+                      border_width=1, border_color="#1E3A5F", text_color="#B8C5D6",
+                      hover_color="#1E2D4A", corner_radius=50,
+                      command=self._selecionar_imagem_qrcode).pack(side="left", padx=6)
+        ctk.CTkButton(btn_row, text="FECHAR", width=120, fg_color="#cc0000",
+                      corner_radius=50, command=self._fechar_leitor_qrcode).pack(side="left", padx=6)
+
+        self._qr_cap = None
+        self._qr_ativo = True
+        self._iniciar_camera_qrcode()
+
+    def _iniciar_camera_qrcode(self):
+        try:
+            self._qr_cap = cv2.VideoCapture(0)
+            if not self._qr_cap or not self._qr_cap.isOpened():
+                self._qr_video_label.configure(text="Câmera não encontrada.\nUse 'Selecionar Imagem' abaixo.",
+                                                 text_color="#e74c3c")
+                self._qr_cap = None
+                return
+            self._loop_camera_qrcode()
+        except Exception as e:
+            self._qr_video_label.configure(text=f"Erro ao acessar câmera:\n{e}\nUse 'Selecionar Imagem'.",
+                                             text_color="#e74c3c")
+            self._qr_cap = None
+
+    def _loop_camera_qrcode(self):
+        if not self._qr_ativo or self._qr_cap is None:
+            return
+        ok, frame = self._qr_cap.read()
+        if ok:
+            # Tenta decodificar o QR Code no frame atual
+            codigos = ler_qrcode_frame(frame)
+            if codigos:
+                texto = codigos[0].data.decode("utf-8", errors="ignore")
+                self._processar_leitura_qrcode(texto)
+                return  # Para o loop assim que encontra um QR válido
+
+            # Exibe o frame da câmera na interface
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame_rgb).resize((460, 340))
+            img_tk = ImageTk.PhotoImage(img)
+            self._qr_video_label.configure(image=img_tk, text="")
+            self._qr_video_label.image = img_tk
+
+        if self._qr_ativo:
+            self._qr_janela.after(30, self._loop_camera_qrcode)
+
+    def _selecionar_imagem_qrcode(self):
+        filtros = [("Imagens e PDF", "*.png *.jpg *.jpeg *.bmp *.webp *.pdf")]
+        caminho = filedialog.askopenfilename(
+            title="Selecione a imagem ou o PDF com o QR Code",
+            filetypes=filtros
+        )
+        if not caminho:
+            return
+        try:
+            if caminho.lower().endswith(".pdf"):
+                codigos = self._ler_qrcode_de_pdf(caminho)
+            else:
+                img = Image.open(caminho)
+                codigos = ler_qrcode_frame(img)
+
+            if not codigos:
+                messagebox.showwarning("QR Code não encontrado", "Não foi possível ler nenhum QR Code nesse arquivo.")
+                return
+            texto = codigos[0].data.decode("utf-8", errors="ignore")
+            self._processar_leitura_qrcode(texto)
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao ler o arquivo: {e}")
+
+    def _ler_qrcode_de_pdf(self, caminho_pdf):
+        """
+        Abre um PDF (ex: a nota fiscal gerada pelo sistema), renderiza cada
+        página como imagem de alta resolução e procura o QR Code nelas.
+        """
+        if not LEITOR_PDF_DISPONIVEL:
+            raise RuntimeError(
+                "Suporte a leitura de PDF não instalado. Rode:\npip install pymupdf"
+            )
+        doc = _pymupdf_fitz.open(caminho_pdf)
+        try:
+            for pagina in doc:
+                # Zoom 3x para garantir resolução suficiente para o QR Code
+                pix = pagina.get_pixmap(matrix=_pymupdf_fitz.Matrix(3, 3))
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                codigos = ler_qrcode_frame(img)
+                if codigos:
+                    return codigos
+            return []
+        finally:
+            doc.close()
+
+    def _processar_leitura_qrcode(self, texto_qr):
+        # Pausa a câmera enquanto mostra o resultado
+        self._qr_ativo = False
+
+        numero_op = self._extrair_numero_op(texto_qr)
+        pedido = self._buscar_pedido_por_numero(numero_op) if numero_op else None
+
+        if pedido:
+            _, numero, produto, quantidade, cliente, rua, casa, bairro, cep, prioridade, status = pedido
+            texto_resultado = (
+                f"✔ PEDIDO ENCONTRADO NO SISTEMA\n\n"
+                f"OP: {numero}\n"
+                f"Cliente: {cliente}\n"
+                f"Produto: {produto}\n"
+                f"Quantidade: {quantidade}\n"
+                f"Endereço: {rua}, {casa} - {bairro}\n"
+                f"CEP: {cep}\n"
+                f"Status atual: {status}"
+            )
+            self._qr_resultado_label.configure(text=texto_resultado, text_color=ML_VERDE)
+        else:
+            texto_resultado = (
+                "⚠ QR CODE LIDO, MAS PEDIDO NÃO ENCONTRADO\n\n"
+                "O código não corresponde a nenhuma ordem cadastrada no sistema. "
+                "Confira se este é o pacote correto antes de entregar.\n\n"
+                f"Conteúdo lido:\n{texto_qr}"
+            )
+            self._qr_resultado_label.configure(text=texto_resultado, text_color="#e74c3c")
+
+        # Libera a câmera
+        if self._qr_cap is not None:
+            self._qr_cap.release()
+            self._qr_cap = None
+
+        # Substitui a área de vídeo por um botão de "ler novamente"
+        self._qr_video_label.configure(image=None, text="Leitura concluída.", text_color="#8896AB")
+        self._qr_video_label.image = None
+
+        btn_novamente = ctk.CTkButton(
+            self._qr_resultado_frame, text="🔄 LER OUTRO QR CODE", fg_color=ML_AZUL,
+            text_color="#0A1628", font=("Trebuchet MS", 12, "bold"), corner_radius=50,
+            command=self._reiniciar_leitura_qrcode
+        )
+        btn_novamente.pack(pady=(0, 12))
+        self._qr_btn_novamente = btn_novamente
+
+    def _reiniciar_leitura_qrcode(self):
+        self._qr_btn_novamente.destroy()
+        self._qr_resultado_label.configure(text="Aguardando leitura...", text_color="#8896AB")
+        self._qr_video_label.configure(text="", text_color="#8896AB")
+        self._qr_ativo = True
+        self._iniciar_camera_qrcode()
+
+    def _fechar_leitor_qrcode(self):
+        self._qr_ativo = False
+        if getattr(self, "_qr_cap", None) is not None:
+            self._qr_cap.release()
+            self._qr_cap = None
+        self._qr_janela.destroy()

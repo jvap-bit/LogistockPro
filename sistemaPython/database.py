@@ -14,8 +14,12 @@ def hash_senha(senha):
     return hashlib.sha256(senha.encode()).hexdigest()
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15)
     cursor = conn.cursor()
+    # WAL reduz drasticamente os erros de "database is locked", permitindo
+    # que leituras e escritas aconteçam ao mesmo tempo sem travar o arquivo.
+    cursor.execute('PRAGMA journal_mode=WAL;')
+    cursor.execute('PRAGMA busy_timeout=15000;')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS pedidos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,7 +51,7 @@ def init_db():
     conn.close()
 
 def registrar_log(mensagem):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15)
     cursor = conn.cursor()
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute("INSERT INTO logs (data_hora, acao) VALUES (?, ?)", (data_atual, mensagem))
@@ -65,7 +69,7 @@ def cadastrar_usuario(email, senha, perfil):
     if perfil not in perfis_validos:
         return False, "Perfil inválido."
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(DB_PATH, timeout=15)
         cursor = conn.cursor()
         data_atual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         cursor.execute(
@@ -84,7 +88,7 @@ def cadastrar_usuario(email, senha, perfil):
 def autenticar_usuario(email, senha):
     """Autentica usuário. Retorna (True, perfil) ou (False, None)."""
     email = email.strip().lower()
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15)
     cursor = conn.cursor()
     cursor.execute(
         "SELECT perfil FROM usuarios WHERE email = ? AND senha = ?",

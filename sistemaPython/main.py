@@ -4,7 +4,7 @@ import customtkinter as ctk
 
 # --- INSTALAÇÃO AUTOMÁTICA ---
 def instalar_dependencias():
-    libs = ["customtkinter", "pandas", "openpyxl", "requests", "reportlab"]
+    libs = ["customtkinter", "pandas", "openpyxl", "requests", "reportlab", "qrcode", "pillow", "opencv-python", "pyzbar", "pymupdf"]
     for lib in libs:
         try: __import__(lib)
         except ImportError:

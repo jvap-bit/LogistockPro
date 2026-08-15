@@ -1,0 +1,10 @@
+customtkinter
+pandas
+openpyxl
+reportlab
+qrcode[pil]
+Pillow
+Flask
+opencv-python
+pyzbar
+pymupdf
