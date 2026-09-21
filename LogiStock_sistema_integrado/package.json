@@ -1,0 +1,14 @@
+{
+  "name": "logistockpro-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
