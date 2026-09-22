@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogiStock Pro — Documentação Técnica v3.0</title>
+<style>
+:root{
+  --navy:#0A1628;--navy2:#162040;--navy3:#1E2D4A;--yellow:#F5C518;
+  --blue:#3B8BD4;--green:#2ecc71;--red:#e74c3c;--orange:#F39C12;
+  --gray:#9BA8BA;--light:#E6EDF3;--border:#1E3A5F;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--navy);color:var(--light);display:flex;min-height:100vh}
+#sidebar{position:fixed;inset:0 auto 0 0;width:270px;background:var(--navy2);border-right:1px solid var(--border);overflow:auto;padding-bottom:30px;z-index:20}
+.logo{padding:25px 20px;border-bottom:1px solid var(--border)}
+.logo h1{font-size:25px;letter-spacing:2px;color:var(--yellow)} .logo span{font-size:11px;color:var(--gray)}
+.group{padding:20px 14px 0}.group-title{font-size:10px;color:var(--gray);font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;padding:0 8px 8px}
+.link{display:block;color:#c4cfdd;text-decoration:none;padding:9px 10px;border-radius:8px;font-size:13px;margin:2px 0}
+.link:hover{background:#1d2b49;color:var(--yellow)}
+#main{margin-left:270px;min-width:0;width:100%}
+.topbar{position:sticky;top:0;z-index:10;background:rgba(10,22,40,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:15px 42px;display:flex;gap:10px;align-items:center}
+.badge{font-size:11px;font-weight:bold;border-radius:20px;padding:5px 10px;border:1px solid var(--border)}
+.yellow{color:var(--yellow);border-color:#665718}.green{color:var(--green);border-color:#236943}.blue{color:#71b8ff;border-color:#315e87}.orange{color:var(--orange);border-color:#76541d}
+.hero{padding:72px 46px 55px;border-bottom:1px solid var(--border);background-image:linear-gradient(rgba(245,197,24,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(245,197,24,.035) 1px,transparent 1px);background-size:48px 48px}
+.hero small{color:var(--yellow);font-weight:bold;letter-spacing:2px;text-transform:uppercase}
+.hero h1{font-size:64px;line-height:.95;margin:15px 0}.hero h1 span{color:var(--yellow)}
+.hero p{max-width:760px;color:var(--gray);line-height:1.7;font-size:17px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:25px}
+.section{max-width:1050px;padding:55px 46px;border-bottom:1px solid var(--border)}
+.eyebrow{font-size:11px;color:var(--yellow);font-weight:bold;letter-spacing:2px;text-transform:uppercase;margin-bottom:9px}
+h2{font-size:35px;margin-bottom:16px}h3{font-size:21px;color:var(--yellow);margin:30px 0 12px}
+p{color:var(--gray);line-height:1.72;margin:10px 0 15px} strong{color:var(--light)}
+code{font-family:Consolas,monospace;color:#82c5ff;background:#0d1a2d;padding:2px 5px;border-radius:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card h4{color:var(--yellow);margin-bottom:8px}.card p{font-size:13px;margin:0}.card .path{display:inline-block;margin-top:10px;color:#82c5ff;font:11px Consolas,monospace}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:28px 0}
+.stat{background:var(--navy2);padding:20px;text-align:center}.stat b{display:block;color:var(--yellow);font-size:30px}.stat span{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:bold}
+.callout{border:1px solid #6d5b17;background:rgba(245,197,24,.06);border-radius:12px;padding:15px 17px;margin:18px 0;color:var(--gray);line-height:1.6}
+.callout.info{border-color:#285f91;background:rgba(59,139,212,.07)}.callout.ok{border-color:#24613e;background:rgba(46,204,113,.07)}
+pre{white-space:pre;overflow:auto;background:#060d1a;border:1px solid var(--border);border-radius:12px;padding:20px;color:#c9d1d9;font:12px/1.65 Consolas,monospace;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13px}th{background:var(--navy3);color:var(--yellow);text-align:left;padding:11px 13px}td{border-bottom:1px solid var(--border);padding:11px 13px;vertical-align:top;color:#d7dfeb}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0}.flow span{padding:10px 13px;border:1px solid var(--border);background:var(--navy2);border-radius:9px;font-size:12px}.flow b{color:var(--yellow)}
+ul{color:var(--gray);padding-left:22px;line-height:1.8;margin:12px 0}
+.footer{text-align:center;padding:35px;color:var(--gray);font-size:12px}
+#toggle{display:none;position:fixed;right:20px;bottom:20px;z-index:30;width:48px;height:48px;border:0;border-radius:50%;background:var(--yellow);font-size:20px}
+@media(max-width:850px){#sidebar{transform:translateX(-100%);transition:.25s}#sidebar.open{transform:none}#main{margin-left:0}.section,.hero{padding-left:24px;padding-right:24px}.topbar{padding:13px 24px;flex-wrap:wrap}.stats{grid-template-columns:1fr 1fr}.hero h1{font-size:48px}#toggle{display:block}}
+</style>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="logo"><h1>LogiStock PRO</h1><span>Documentação Técnica v3.0 · Setembro 2026</span></div>
+  <div class="group"><div class="group-title">Visão Geral</div>
+    <a class="link" href="#intro">Introdução</a><a class="link" href="#arquitetura">Arquitetura</a><a class="link" href="#estrutura">Estrutura de Pastas</a>
+  </div>
+  <div class="group"><div class="group-title">Site Institucional</div>
+    <a class="link" href="#site">Novo Site</a><a class="link" href="#paginas">Páginas</a><a class="link" href="#recursos-site">Recursos Web</a>
+  </div>
+  <div class="group"><div class="group-title">Sistema Integrado</div>
+    <a class="link" href="#backend">Node.js / API</a><a class="link" href="#auth">Autenticação</a><a class="link" href="#perfis">Perfis</a><a class="link" href="#ordens">Ordens e Kanban</a><a class="link" href="#qr">PDF + QR</a><a class="link" href="#banco">SQLite</a>
+  </div>
+  <div class="group"><div class="group-title">Operação</div>
+    <a class="link" href="#fluxo">Fluxo Integrado</a><a class="link" href="#instalacao">Instalação</a><a class="link" href="#rede">Uso em Rede</a><a class="link" href="#arquivos">Arquivo por Arquivo</a><a class="link" href="#limites">Limites Atuais</a>
+  </div>
+</nav>
+<button id="toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<main id="main">
+<div class="topbar">
+  <strong style="color:var(--yellow)">LogiStock PRO</strong>
+  <span class="badge yellow">v3.0</span><span class="badge blue">Node.js</span><span class="badge green">SQLite</span><span class="badge orange">Site + Sistema Integrado</span>
+  <span style="margin-left:auto;color:var(--gray);font-size:12px">Atualizado: 22/09/2026</span>
+</div>
+
+<header class="hero">
+  <small>Sistema de gestão industrial e logística</small>
+  <h1>LogiStock <span>PRO</span></h1>
+  <p>Documentação atualizada para a versão que reúne o novo site institucional da LogiStock e o sistema operacional integrado em HTML, CSS, JavaScript, Node.js e SQLite. O antigo aplicativo desktop Python deixa de ser a arquitetura principal desta documentação.</p>
+  <div class="tags"><span class="badge yellow">HTML5</span><span class="badge yellow">CSS3</span><span class="badge yellow">JavaScript</span><span class="badge blue">Node.js ≥ 22.13</span><span class="badge green">SQLite</span><span class="badge orange">QR Code</span></div>
+</header>
+
+<section id="intro" class="section">
+<div class="eyebrow">Visão Geral</div><h2>Introdução</h2>
+<p>O projeto atual possui <strong>dois ambientes complementares</strong>. O primeiro é o site institucional, responsável por login visual, apresentação da empresa, cadastro, rastreamento, avaliação, acessibilidade e conteúdo público. O segundo é o <strong>LogiStock Sistema Integrado</strong>, executado por um servidor Node.js e responsável pela operação real de ordens de produção, usuários, sessões, Kanban, logística, QR Code e histórico.</p>
+<div class="stats"><div class="stat"><b>2</b><span>Ambientes</span></div><div class="stat"><b>4</b><span>Perfis</span></div><div class="stat"><b>7</b><span>Páginas do site</span></div><div class="stat"><b>4</b><span>Tabelas SQLite</span></div></div>
+<div class="callout ok"><strong>Principal mudança:</strong> a versão integrada não depende do antigo programa Python/CustomTkinter para operar. O núcleo operacional agora roda no navegador, com um servidor Node.js compartilhando o mesmo banco SQLite entre as contas.</div>
+</section>
+
+<section id="arquitetura" class="section">
+<div class="eyebrow">Arquitetura</div><h2>Como os ambientes se organizam</h2>
+<pre>USUÁRIO
+  │
+  ├── Site institucional
+  │     index.html
+  │        └── web/pages/
+  │             ├── inicio.html
+  │             ├── cadastro.html
+  │             ├── sobre.html
+  │             ├── rastreio.html
+  │             ├── avaliacao.html
+  │             ├── junte-se.html
+  │             └── leitor-entregador.html
+  │
+  └── Sistema Integrado
+        navegador
+           │
+           ▼
+        public/app.js
+           │  API HTTP
+           ▼
+        server.js (Node.js)
+           │
+           ▼
+        data/producao.db (SQLite)</pre>
+<p>No sistema integrado, <code>public/app.js</code> constrói a interface e chama as rotas HTTP. O <code>server.js</code> aplica autenticação, permissões e regras de negócio. O arquivo <code>data/producao.db</code> mantém os dados persistentes.</p>
+</section>
+
+<section id="estrutura" class="section">
+<div class="eyebrow">Organização</div><h2>Estrutura atual do projeto</h2>
+<pre>LogistockPro-main/
+├── index.html                         # Login visual do site institucional
+├── README.md
+├── web/
+│   ├── pages/
+│   │   ├── inicio.html
+│   │   ├── cadastro.html
+│   │   ├── sobre.html
+│   │   ├── rastreio.html
+│   │   ├── avaliacao.html
+│   │   ├── junte-se.html
+│   │   └── leitor-entregador.html
+│   ├── components/
+│   │   ├── chatbot.html
+│   │   └── vlibras.html
+│   └── assets/
+│       ├── css/                       # CSS global e CSS de cada página
+│       ├── js/                        # chatbot.js, perfil.js, vlibras.js
+│       ├── IMG/                       # logos e imagens
+│       └── documentacao/
+└── LogiStock_sistema_integrado/
+    ├── server.js                      # Servidor, API, autenticação e banco
+    ├── package.json                   # Configuração Node/NPM
+    ├── package-lock.json
+    ├── README.md
+    ├── public/
+    │   ├── index.html                 # Entrada do painel operacional
+    │   ├── style.css                  # Interface responsiva
+    │   └── app.js                     # Front-end do sistema
+    ├── data/
+    │   ├── producao.db                # Banco SQLite
+    │   ├── producao.db-wal
+    │   └── producao.db-shm
+    └── node_modules/                  # Dependências instaladas pelo NPM</pre>
+</section>
+
+<section id="site" class="section">
+<div class="eyebrow">Site Institucional</div><h2>Novo site da LogiStock</h2>
+<p>O site continua separado do painel operacional e apresenta a identidade visual da LogiStock. A entrada principal está em <code>index.html</code>, com formulário de e-mail e senha e redirecionamento para <code>web/pages/inicio.html</code>. Nesta camada, o nome exibido após o login é derivado do e-mail e salvo em <code>localStorage</code>.</p>
+<div class="callout info"><strong>Importante:</strong> o login da raiz do site é uma experiência de front-end. A autenticação protegida por senha, hash, sessão e banco de usuários está implementada no <strong>sistema integrado Node.js</strong>.</div>
+</section>
+
+<section id="paginas" class="section">
+<div class="eyebrow">Navegação</div><h2>Páginas do site</h2>
+<div class="grid">
+<div class="card"><h4>Login</h4><p>Entrada do site e redirecionamento para a Home.</p><span class="path">index.html</span></div>
+<div class="card"><h4>Início</h4><p>Apresentação principal da LogiStock, conteúdo institucional e navegação.</p><span class="path">web/pages/inicio.html</span></div>
+<div class="card"><h4>Cadastro</h4><p>Tela de cadastro da experiência web.</p><span class="path">web/pages/cadastro.html</span></div>
+<div class="card"><h4>Sobre</h4><p>Informações institucionais e apresentação do projeto/empresa.</p><span class="path">web/pages/sobre.html</span></div>
+<div class="card"><h4>Rastreamento</h4><p>Interface dedicada à consulta e acompanhamento de pedidos.</p><span class="path">web/pages/rastreio.html</span></div>
+<div class="card"><h4>Avaliação</h4><p>Área de avaliação e feedback.</p><span class="path">web/pages/avaliacao.html</span></div>
+<div class="card"><h4>Junte-se</h4><p>Página institucional para contato e aproximação com a LogiStock.</p><span class="path">web/pages/junte-se.html</span></div>
+<div class="card"><h4>Leitor do Entregador</h4><p>Página web voltada ao fluxo do entregador.</p><span class="path">web/pages/leitor-entregador.html</span></div>
+</div>
+</section>
+
+<section id="recursos-site" class="section">
+<div class="eyebrow">Front-end</div><h2>Recursos compartilhados do site</h2>
+<table><thead><tr><th>Recurso</th><th>Arquivos</th><th>Função</th></tr></thead><tbody>
+<tr><td>Identidade visual</td><td><code>shared.css</code> + CSS por página</td><td>Layout, componentes, responsividade e aparência.</td></tr>
+<tr><td>Chatbot</td><td><code>components/chatbot.html</code> + <code>chatbot.js</code></td><td>Assistente web, incluindo recursos de voz previstos no componente.</td></tr>
+<tr><td>Perfil</td><td><code>perfil.js</code></td><td>Comportamentos de perfil da camada institucional.</td></tr>
+<tr><td>Acessibilidade</td><td><code>components/vlibras.html</code> + <code>vlibras.js</code></td><td>Integração dos recursos de acessibilidade do site.</td></tr>
+<tr><td>Imagens</td><td><code>web/assets/IMG/</code></td><td>Logos, carrossel e imagens institucionais.</td></tr>
+</tbody></table>
+</section>
+
+<section id="backend" class="section">
+<div class="eyebrow">Sistema Integrado</div><h2>Servidor Node.js e API</h2>
+<p>O arquivo <code>server.js</code> é o núcleo do sistema operacional. Ele cria um servidor HTTP, serve os arquivos da pasta <code>public</code>, abre o SQLite com <code>node:sqlite</code>, gera QR Codes e disponibiliza rotas de API.</p>
+<table><thead><tr><th>Rota</th><th>Método</th><th>Função</th></tr></thead><tbody>
+<tr><td><code>/api/register</code></td><td>POST</td><td>Cadastra usuário e perfil.</td></tr>
+<tr><td><code>/api/login</code></td><td>POST</td><td>Valida credenciais e cria sessão.</td></tr>
+<tr><td><code>/api/logout</code></td><td>POST</td><td>Encerra a sessão atual.</td></tr>
+<tr><td><code>/api/me</code></td><td>GET</td><td>Retorna a conta autenticada.</td></tr>
+<tr><td><code>/api/track</code></td><td>GET</td><td>Consulta uma OP pelo número.</td></tr>
+<tr><td><code>/api/orders</code></td><td>GET / POST</td><td>Lista ou cria ordens.</td></tr>
+<tr><td><code>/api/orders/:id</code></td><td>PATCH / DELETE</td><td>Atualiza status ou remove uma OP conforme permissão.</td></tr>
+<tr><td><code>/api/orders/:id/qr</code></td><td>GET</td><td>Gera o QR de consulta da ordem.</td></tr>
+<tr><td><code>/api/logs</code></td><td>GET</td><td>Consulta o histórico de ações.</td></tr>
+<tr><td><code>/documento</code></td><td>GET</td><td>Página pública protegida por token aleatório do QR.</td></tr>
+</tbody></table>
+</section>
+
+<section id="auth" class="section">
+<div class="eyebrow">Segurança</div><h2>Autenticação real</h2>
+<p>O sistema integrado cadastra contas com e-mail, senha e perfil. A senha não é armazenada em texto simples: o servidor gera um <code>salt</code> aleatório e usa <code>scrypt</code> para produzir <code>password_hash</code>. No login, a comparação usa operação segura de tempo constante.</p>
+<p>Após autenticar, o servidor cria um token aleatório, salva somente o <strong>hash do token</strong> na tabela <code>sessoes</code> e envia ao navegador um cookie <code>HttpOnly</code> com <code>SameSite=Lax</code>. A sessão expira em sete dias.</p>
+<div class="flow"><span>Senha</span><b>→</b><span>Salt + scrypt</span><b>→</b><span>Hash no SQLite</span><b>→</b><span>Login</span><b>→</b><span>Cookie de sessão</span></div>
+</section>
+
+<section id="perfis" class="section">
+<div class="eyebrow">Controle de Acesso</div><h2>Perfis do sistema</h2>
+<div class="grid">
+<div class="card"><h4>PCP</h4><p>Cria OPs, acompanha o Kanban e avança o fluxo A Fazer → Em Andamento → Qualidade → Finalizado. Pode remover registros permitidos.</p></div>
+<div class="card"><h4>Produção</h4><p>Acompanha as ordens criadas pelo PCP e as etapas produtivas em painel próprio.</p></div>
+<div class="card"><h4>Gestão</h4><p>Visualiza todas as etapas, indicadores por contagem, histórico e pode remover ordens finalizadas/entregues conforme a regra do sistema.</p></div>
+<div class="card"><h4>Entregador</h4><p>Trabalha no painel logístico, consulta OP, lê QR quando o navegador permite e movimenta Finalizado → Em Rota → Entregue.</p></div>
+</div>
+</section>
+
+<section id="ordens" class="section">
+<div class="eyebrow">Produção</div><h2>Ordens, Kanban e atualização</h2>
+<p>As ordens são carregadas do SQLite e exibidas pelo <code>app.js</code>. O sistema possui pesquisa por OP/cliente, ordenação e cards com ações condicionadas ao perfil. As telas consultam novamente os dados periodicamente, permitindo que alterações feitas em uma conta apareçam nas outras.</p>
+<div class="flow"><span>A Fazer</span><b>→</b><span>Em Andamento</span><b>→</b><span>Qualidade</span><b>→</b><span>Finalizado</span><b>→</b><span>Em Rota</span><b>→</b><span>Entregue</span></div>
+<p>A atualização automática ocorre a cada <strong>4 segundos</strong>. Portanto, a versão atual usa sincronização por consultas periódicas (polling), e não WebSocket.</p>
+<h3>Dados de uma OP</h3>
+<p>Número, produto, quantidade, cliente, rua, número/casa, bairro, CEP, prioridade, status, descrição e token de QR. O número da OP é validado para evitar novos registros duplicados.</p>
+</section>
+
+<section id="qr" class="section">
+<div class="eyebrow">Logística</div><h2>PDF, QR Code e celular</h2>
+<p>O botão <strong>PDF + QR</strong> abre um comprovante de impressão no navegador. O QR não armazena todo o documento: ele contém um link para <code>/documento</code> com um token aleatório associado à OP.</p>
+<div class="flow"><span>OP no SQLite</span><b>→</b><span>Token aleatório</span><b>→</b><span>Link /documento</span><b>→</b><span>QR Code</span><b>→</b><span>Celular</span></div>
+<p>A página aberta no celular mostra OP, produto, quantidade, cliente, endereço, prioridade e status atual. Ela também oferece acesso ao sistema para o entregador. O comprovante é operacional e <strong>não substitui nota fiscal eletrônica</strong>.</p>
+<div class="callout"><strong>Atenção:</strong> quem possuir o QR/link consegue consultar os dados do comprovante. O PDF não deve ser compartilhado fora da equipe responsável.</div>
+</section>
+
+<section id="banco" class="section">
+<div class="eyebrow">Persistência</div><h2>Banco SQLite</h2>
+<p>O banco está em <code>LogiStock_sistema_integrado/data/producao.db</code>. O servidor ativa <code>WAL</code>, timeout de banco e chaves estrangeiras.</p>
+<table><thead><tr><th>Tabela</th><th>Responsabilidade</th><th>Campos principais</th></tr></thead><tbody>
+<tr><td><code>pedidos</code></td><td>Ordens de produção e logística.</td><td>numero, produto, quantidade, cliente, endereço, prioridade, status, descricao, qr_token.</td></tr>
+<tr><td><code>usuarios</code></td><td>Contas dos quatro perfis.</td><td>email, perfil, data_cadastro, salt, password_hash.</td></tr>
+<tr><td><code>logs</code></td><td>Auditoria das ações.</td><td>data_hora, acao.</td></tr>
+<tr><td><code>sessoes</code></td><td>Sessões autenticadas.</td><td>token_hash, usuario_id, expira_em.</td></tr>
+</tbody></table>
+<p>Os arquivos <code>producao.db-wal</code> e <code>producao.db-shm</code> são auxiliares do modo WAL do SQLite e não devem ser editados manualmente.</p>
+</section>
+
+<section id="fluxo" class="section">
+<div class="eyebrow">Integração</div><h2>Fluxo completo de uso</h2>
+<pre>1. PCP cadastra uma nova OP
+          │
+          ▼
+2. server.js grava em pedidos
+          │
+          ▼
+3. Produção e Gestão recebem a OP nas próximas atualizações
+          │
+          ▼
+4. PCP avança: A Fazer → Em Andamento → Qualidade → Finalizado
+          │
+          ▼
+5. Sistema gera comprovante + QR quando solicitado
+          │
+          ▼
+6. Entregador recebe a ordem finalizada
+          │
+          ▼
+7. Finalizado → Em Rota → Entregue
+          │
+          ▼
+8. Novo status aparece para PCP, Produção e Gestão
+          │
+          ▼
+9. Ações relevantes ficam registradas em logs</pre>
+</section>
+
+<section id="instalacao" class="section">
+<div class="eyebrow">Execução</div><h2>Instalação do sistema integrado</h2>
+<p>O sistema requer <strong>Node.js 22.13 ou superior</strong>. Dentro da pasta <code>LogiStock_sistema_integrado</code>, execute:</p>
+<pre>npm install
+npm start</pre>
+<p>O script <code>npm start</code> executa <code>node server.js</code>. Por padrão, o painel fica disponível na porta <code>3000</code>.</p>
+<div class="callout ok"><strong>Dependência NPM principal:</strong> <code>qrcode ^1.5.4</code>. O SQLite é utilizado por meio do módulo <code>node:sqlite</code> da versão compatível do Node.js.</div>
+</section>
+
+<section id="rede" class="section">
+<div class="eyebrow">Rede Local</div><h2>QR Code acessível pelo celular</h2>
+<p>Para o celular abrir o QR, ele precisa alcançar o computador que executa o servidor. Computador e celular devem estar na mesma rede, ou o sistema deve possuir um endereço HTTP/HTTPS acessível.</p>
+<p>No Windows/PowerShell, antes de iniciar o servidor, pode ser definido:</p>
+<pre>$env:APP_BASE_URL = "http://192.168.1.10:3000"
+npm start</pre>
+<p>O IP acima é apenas um exemplo: deve ser substituído pelo IPv4 real do computador. Antes de gerar o comprovante, teste esse mesmo endereço no navegador do celular e permita o Node.js na rede privada do Firewall do Windows.</p>
+</section>
+
+<section id="arquivos" class="section">
+<div class="eyebrow">Referência Técnica</div><h2>Função dos principais arquivos</h2>
+<table><thead><tr><th>Arquivo</th><th>Função</th></tr></thead><tbody>
+<tr><td><code>index.html</code></td><td>Login visual e entrada do site institucional.</td></tr>
+<tr><td><code>web/pages/*.html</code></td><td>Páginas institucionais, cadastro, rastreio, avaliação e leitor.</td></tr>
+<tr><td><code>web/assets/css/shared.css</code></td><td>Estilos compartilhados do site.</td></tr>
+<tr><td><code>web/assets/css/*.css</code></td><td>Estilos específicos de cada página.</td></tr>
+<tr><td><code>web/assets/js/chatbot.js</code></td><td>Comportamento do chatbot web.</td></tr>
+<tr><td><code>web/assets/js/perfil.js</code></td><td>Recursos de perfil do site.</td></tr>
+<tr><td><code>web/assets/js/vlibras.js</code></td><td>Integração de acessibilidade.</td></tr>
+<tr><td><code>server.js</code></td><td>Servidor HTTP, API REST, autenticação, permissões, SQLite, QR e página de documento.</td></tr>
+<tr><td><code>public/index.html</code></td><td>Estrutura inicial do painel operacional.</td></tr>
+<tr><td><code>public/app.js</code></td><td>Interface dinâmica, login/cadastro, painéis, Kanban, filtros, impressão, QR e leitor.</td></tr>
+<tr><td><code>public/style.css</code></td><td>Design do sistema integrado, tema claro/escuro e responsividade.</td></tr>
+<tr><td><code>package.json</code></td><td>Versão do projeto, requisito do Node, dependências e comando <code>npm start</code>.</td></tr>
+<tr><td><code>package-lock.json</code></td><td>Trava as versões das dependências NPM.</td></tr>
+<tr><td><code>data/producao.db</code></td><td>Banco persistente do sistema.</td></tr>
+<tr><td><code>node_modules/</code></td><td>Bibliotecas instaladas; não deve ser editada manualmente.</td></tr>
+</tbody></table>
+</section>
+
+<section id="limites" class="section">
+<div class="eyebrow">Estado Atual</div><h2>Limites e melhorias futuras</h2>
+<ul>
+<li>O cálculo de frete continua simplificado em <strong>peso × R$ 12,50</strong>; os CEPs não calculam distância real.</li>
+<li>A exportação da versão web é voltada a CSV compatível com Excel; o comprovante PDF usa a impressão do navegador.</li>
+<li>A leitura automática de QR pela câmera depende de <code>BarcodeDetector</code>, suporte do navegador e permissão de câmera; a digitação manual da OP continua disponível.</li>
+<li>A sincronização entre contas ocorre por atualização periódica de 4 segundos, não por WebSocket.</li>
+<li>O cadastro de perfis é adequado para demonstração/rede de confiança; uma implantação pública deve adicionar administração de contas, HTTPS e políticas de segurança mais rígidas.</li>
+<li>O login do site institucional e o login do sistema integrado são camadas diferentes; uma evolução futura pode unificar completamente a autenticação entre os dois ambientes.</li>
+</ul>
+<div class="callout info"><strong>Backup:</strong> para preservar usuários, OPs, logs e tokens, mantenha cópia segura do arquivo <code>data/producao.db</code> com o servidor parado ou usando um procedimento apropriado de backup SQLite.</div>
+</section>
+
+<div class="footer">Documentação Técnica — <strong style="color:var(--yellow)">LogiStock PRO v3.0</strong> · Site + Sistema Integrado · 2026</div>
+</main>
+<script>
+document.querySelectorAll('.link').forEach(a=>a.addEventListener('click',()=>document.getElementById('sidebar').classList.remove('open')));
+</script>
+</body>
+</html>
