@@ -12,7 +12,8 @@ db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=
 CREATE TABLE IF NOT EXISTS pedidos(id INTEGER PRIMARY KEY AUTOINCREMENT,numero TEXT NOT NULL UNIQUE,produto TEXT NOT NULL,quantidade TEXT NOT NULL,cliente TEXT NOT NULL,rua TEXT,casa TEXT,bairro TEXT,cep TEXT,prioridade TEXT NOT NULL DEFAULT 'Normal',status TEXT NOT NULL DEFAULT 'A Fazer',descricao TEXT);
 CREATE TABLE IF NOT EXISTS logs(id INTEGER PRIMARY KEY AUTOINCREMENT,data_hora TEXT NOT NULL,acao TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS usuarios(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT NOT NULL UNIQUE,senha TEXT,perfil TEXT NOT NULL,data_cadastro TEXT);
-CREATE TABLE IF NOT EXISTS sessoes(token_hash TEXT PRIMARY KEY,usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,expira_em INTEGER NOT NULL);`);
+CREATE TABLE IF NOT EXISTS sessoes(token_hash TEXT PRIMARY KEY,usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,expira_em INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS mensagens(id INTEGER PRIMARY KEY AUTOINCREMENT,de TEXT NOT NULL,para TEXT NOT NULL,assunto TEXT NOT NULL,prioridade TEXT NOT NULL DEFAULT 'Normal',texto TEXT NOT NULL,data_hora TEXT NOT NULL,lida INTEGER NOT NULL DEFAULT 0,resposta_de INTEGER);`);
 const columns=db.prepare('PRAGMA table_info(usuarios)').all().map(x=>x.name);
 if(!columns.includes('salt'))db.exec('ALTER TABLE usuarios ADD COLUMN salt TEXT');
 if(!columns.includes('password_hash'))db.exec('ALTER TABLE usuarios ADD COLUMN password_hash TEXT');
@@ -79,6 +80,25 @@ const server=http.createServer(async(req,res)=>{try{
   target.pathname='/documento';target.search='';target.searchParams.set('token',order.qr_token);target.searchParams.set('op',order.numero);
   const image=await QRCode.toDataURL(target.href,{errorCorrectionLevel:'M',margin:5,width:600});
   return send(res,200,{image,url:target.href});
+ }
+ if(p==='/api/messages'&&method==='GET'){
+  const sector=user.profile==='Entregador'?'Logística':user.profile;
+  return send(res,200,db.prepare('SELECT * FROM mensagens WHERE de=? OR para=? ORDER BY id DESC').all(sector,sector));
+ }
+ if(p==='/api/messages'&&method==='POST'){
+  const b=await body(req),from=user.profile==='Entregador'?'Logística':user.profile,to=String(b.para||'').trim();
+  const allowed=['PCP','Produção','Gestão','Logística'];
+  if(!allowed.includes(to)||to===from)return err(res,'Escolha um setor de destino diferente do seu.');
+  const subject=String(b.assunto||'').trim(),text=String(b.texto||'').trim(),priority=['Baixa','Normal','Alta','Urgente'].includes(b.prioridade)?b.prioridade:'Normal';
+  if(!subject||!text)return err(res,'Preencha assunto e mensagem.');
+  const dt=new Date().toLocaleString('pt-BR');
+  const info=db.prepare('INSERT INTO mensagens(de,para,assunto,prioridade,texto,data_hora,lida,resposta_de) VALUES(?,?,?,?,?,?,0,?)').run(from,to,subject,priority,text,dt,b.resposta_de?Number(b.resposta_de):null);
+  log('Mensagem enviada: '+from+' → '+to+' | '+subject);return send(res,201,{id:Number(info.lastInsertRowid),ok:true});
+ }
+ const msgRead=p.match(/^\/api\/messages\/(\d+)\/read$/);
+ if(msgRead&&method==='PATCH'){
+  const sector=user.profile==='Entregador'?'Logística':user.profile,id=Number(msgRead[1]);
+  db.prepare('UPDATE mensagens SET lida=1 WHERE id=? AND para=?').run(id,sector);return send(res,200,{ok:true});
  }
  if(p==='/api/orders'&&method==='GET')return send(res,200,db.prepare('SELECT * FROM pedidos ORDER BY id').all());
  if(p==='/api/logs'&&method==='GET')return send(res,200,db.prepare('SELECT * FROM logs ORDER BY id DESC').all());
